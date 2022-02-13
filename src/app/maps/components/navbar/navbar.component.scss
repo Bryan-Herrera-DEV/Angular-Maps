@@ -1,0 +1,21 @@
+@mixin small {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+.navbar {
+  background: transparent;
+  border: none;
+  height: 58px;
+  background: rgba($color: #fff, $alpha: 0.5) !important;
+}
+
+.container-fluid {
+  display: flex;
+  justify-content: space-between;
+
+  @include small {
+    flex-direction: column;
+  }
+}

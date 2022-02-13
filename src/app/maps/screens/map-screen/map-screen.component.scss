@@ -1,0 +1,83 @@
+.navbar {
+  border-radius: 0;
+}
+
+.navbar-form {
+  .form-group {
+    input[class="form-control"] {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #9d9d9d;
+      background: #222;
+      color: #fff;
+
+      &:hover {
+        cursor: pointer;
+        border-color: #fff;
+
+        ~.mag-line {
+          background: #fff;
+        }
+      }
+
+      &:focus {
+        animation: openSearchField 0.6s forwards;
+        outline: none;
+        box-shadow: none;
+        border-color: #fff;
+
+        ~.mag-line {
+          display: none;
+        }
+
+        ~button[type="submit"] {
+          display: inline-block;
+          animation: showSearchSubmit 0.6s forwards;
+        }
+      }
+    }
+
+    .mag-line {
+      display: inline-block;
+      position: absolute;
+      width: 2px;
+      height: 12px;
+      background: #9d9d9d;
+      transform: rotate(-45deg) translateX(21px) translateY(15px);
+    }
+
+    button[type="submit"] {
+      display: none;
+      width: 0;
+      padding: 0;
+      opacity: 0;
+      overflow: hidden;
+      border: 2px solid #fff;
+      background: #fff;
+      color: #222;
+    }
+  }
+}
+
+// Keyframes
+//-----------------------------------------------------//
+@keyframes openSearchField {
+  30% {
+    border-radius: 4px;
+  }
+
+  100% {
+    width: 300px;
+    height: 34px;
+    border-radius: 4px;
+  }
+}
+
+@keyframes showSearchSubmit {
+  100% {
+    width: auto;
+    padding: 5px 8px;
+    opacity: 1;
+  }
+}
