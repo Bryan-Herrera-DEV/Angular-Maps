@@ -7,9 +7,10 @@ import Mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 
 Mapboxgl.accessToken =
 	"pk.eyJ1IjoiYnJ5YW5oZXJyZXJhZGV2IiwiYSI6ImNremp6bG5mejBmMXkzMHFrMjZrYWdkdXYifQ.vbbJRkFbDoKo-NPwvQthGA";
+
 if (!navigator.geolocation) {
-	alert("Geolocation is not supported by your browser");
-	throw new Error("Geolocation is not supported by your browser");
+	alert("Navegador no soporta la Geolocation");
+	throw new Error("Navegador no soporta la Geolocation");
 }
 
 if (environment.production) {

@@ -9,6 +9,7 @@ import { Feature, PlacesResponse } from "../interfaces/places";
 })
 export class PlacesService {
 	public userLocation?: [number, number];
+
 	public isLoadingPlaces: boolean = false;
 	public places: Feature[] = [];
 
@@ -16,53 +17,54 @@ export class PlacesService {
 		return !!this.userLocation;
 	}
 
-	constructor(private http: PlacesApiClient, private mapservices: MapService) {
+	constructor(
+		private placesApi: PlacesApiClient,
+		private mapService: MapService
+	) {
 		this.getUserLocation();
 	}
+
 	public async getUserLocation(): Promise<[number, number]> {
 		return new Promise((resolve, reject) => {
 			navigator.geolocation.getCurrentPosition(
 				({ coords }) => {
-					this.userLocation = [coords.latitude, coords.longitude];
+					this.userLocation = [coords.longitude, coords.latitude];
 					resolve(this.userLocation);
 				},
 				(err) => {
-					alert("Could not get your location. Please enable location services.");
-					reject(err);
+					alert("No se pudo obtener la geolocalización");
+					console.log(err);
+					reject();
 				}
 			);
 		});
 	}
 
 	getPlacesByQuery(query: string = "") {
-		//evaluar cuando no hay query
-		if (!this.userLocation) throw new Error("User location is not ready");
 		if (query.length === 0) {
 			this.isLoadingPlaces = false;
 			this.places = [];
 			return;
 		}
+
+		if (!this.userLocation) throw Error("No hay userLocation");
+
 		this.isLoadingPlaces = true;
-		this.http
+
+		this.placesApi
 			.get<PlacesResponse>(`/${query}.json`, {
 				params: {
 					proximity: this.userLocation.join(","),
 				},
 			})
-			.subscribe(
-				(data: PlacesResponse) => {
-					console.log(data);
-					this.isLoadingPlaces = false;
-					this.places = data.features;
+			.subscribe((resp: PlacesResponse) => {
+				this.isLoadingPlaces = false;
+				this.places = resp.features;
 
-					this.mapservices.createMarekersFromPlaces(this.places, this.userLocation!);
-				},
-				(err: any) => {
-					console.log(err);
-					this.isLoadingPlaces = false;
-				}
-			);
+				this.mapService.createMarkersFromPlaces(this.places, this.userLocation!);
+			});
 	}
+
 	deletePlaces() {
 		this.places = [];
 	}

@@ -18,89 +18,83 @@ export class MapService {
 	private map?: Map;
 	private markers: Marker[] = [];
 
-	constructor(private directionsapi: DirectionsApiClient) {}
-	get IsMapReady() {
+	get isMapReady() {
 		return !!this.map;
 	}
+
+	constructor(private directionsApi: DirectionsApiClient) {}
 
 	setMap(map: Map) {
 		this.map = map;
 	}
 
 	flyTo(coords: LngLatLike) {
-		if (!this.map) {
-			throw new Error("Map is not ready");
-		}
-		this.map?.flyTo({
-			center: coords,
-			zoom: 17,
-			speed: 1.5, // make the flying slow
-			curve: 1, // change the speed at which it zooms out
-			easing: (t) => t,
+		if (!this.isMapReady) throw Error("El mapa no esta inicializado");
 
-			// this animation is considered essential with respect to prefers-reduced-motion
-			essential: true,
+		this.map?.flyTo({
+			zoom: 14,
+			center: coords,
 		});
 	}
-	createMarekersFromPlaces(places: Feature[], userLocation: [number, number]) {
-		if (!this.map) throw new Error("Map is not ready");
+
+	createMarkersFromPlaces(places: Feature[], userLocation: [number, number]) {
+		if (!this.map) throw Error("Mapa no inicializado");
+
 		this.markers.forEach((marker) => marker.remove());
 		const newMarkers = [];
 
 		for (const place of places) {
 			const [lng, lat] = place.center;
-			const popUp = new Popup().setHTML(`
-			<h6>${place.text}</h6>
-			<span>${place.place_name}</span>
-			`);
+			const popup = new Popup().setHTML(`
+          <h6>${place.text}</h6>
+          <span>${place.place_name}</span>
+        `);
+
 			const newMarker = new Marker()
 				.setLngLat([lng, lat])
-				.setPopup(popUp)
+				.setPopup(popup)
 				.addTo(this.map);
 
 			newMarkers.push(newMarker);
 		}
-		if (places.length === 0) return;
-		this.markers = newMarkers;
-		// limites del mapa
-		const bounds = new LngLatBounds();
 
+		this.markers = newMarkers;
+
+		if (places.length === 0) return;
+
+		// Limites del mapa
+		const bounds = new LngLatBounds();
 		newMarkers.forEach((marker) => bounds.extend(marker.getLngLat()));
 		bounds.extend(userLocation);
+
 		this.map.fitBounds(bounds, {
 			padding: 200,
-			speed: 1.5,
-			curve: 1,
-			easing: (t) => t,
-			essential: true,
 		});
 	}
+
 	getRouteBetweenPoints(start: [number, number], end: [number, number]) {
-		this.directionsapi
+		this.directionsApi
 			.get<DirectionsResponse>(`/${start.join(",")};${end.join(",")}`)
-			.subscribe((resp: DirectionsResponse) => {
-				this.drawPolyline(resp.routes[0]);
-			});
+			.subscribe((resp: DirectionsResponse) => this.drawPolyline(resp.routes[0]));
 	}
 
 	private drawPolyline(route: Route) {
-		console.log({
-			kms: route.distance / 1000,
-			duration: route.duration / 60,
-		});
-		if (!this.map) throw new Error("Map is not ready");
+		console.log({ kms: route.distance / 1000, duration: route.duration / 60 });
+
+		if (!this.map) throw Error("Mapa no inicializado");
+
 		const coords = route.geometry.coordinates;
 
 		const bounds = new LngLatBounds();
-
-		coords.forEach(([lng, lat]) => bounds.extend([lng, lat]));
-		this.map.fitBounds(bounds, {
-			padding: 200,
-			speed: 1.5,
-			curve: 1,
-			easing: (t) => t,
-			essential: true,
+		coords.forEach(([lng, lat]) => {
+			bounds.extend([lng, lat]);
 		});
+
+		this.map?.fitBounds(bounds, {
+			padding: 200,
+		});
+
+		// Polyline
 		const sourceData: AnySourceData = {
 			type: "geojson",
 			data: {
@@ -117,12 +111,14 @@ export class MapService {
 				],
 			},
 		};
-		// limpiar ruta previa
+
 		if (this.map.getLayer("RouteString")) {
 			this.map.removeLayer("RouteString");
 			this.map.removeSource("RouteString");
 		}
+
 		this.map.addSource("RouteString", sourceData);
+
 		this.map.addLayer({
 			id: "RouteString",
 			type: "line",
@@ -132,7 +128,7 @@ export class MapService {
 				"line-join": "round",
 			},
 			paint: {
-				"line-color": "#3bb2d0",
+				"line-color": "black",
 				"line-width": 3,
 			},
 		});
